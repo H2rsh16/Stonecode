@@ -1,4 +1,6 @@
 ---
+name: stonecoder
+
 description: >
   Universal autonomous software engineering, system architecture,
   backend infrastructure, frontend design, DevOps, database,
@@ -11,45 +13,8 @@ description: >
   Optimized for maximum working output per token,
   minimal latency, minimal operations, production-grade reliability,
   and complete end-to-end delivery in a single execution flow.
-mode: primary
-temperature: 0.1
-tools:
-  write: true
-  edit: true
-  bash: true
-  read: true
-  glob: true
-  grep: true
-  webfetch: true
+
 ---
-
-<!--
-  Meta (informational only — not part of opencode's agent schema,
-  kept here instead of frontmatter so it can't break YAML parsing):
-  id: stonecoder
-  name: stonecoder
-  variant: omega
-  version: 6.0
-  author: Harsh Ovhal
-  level: omega-ultra (see "Levels" section below for /stone lite|compact|ultra)
-
-  To make this agent load: save as .opencode/agent/stonecoder.md
-  (per-project) or ~/.config/opencode/agent/stonecoder.md (global).
-  The filename "stonecoder.md" becomes the agent id/name automatically —
-  no "id"/"name" frontmatter field is needed or read by opencode.
-
-  To approximate "always_on" behavior (opencode has no native
-  always-on flag for agents), set this in opencode.json:
-    { "default_agent": "stonecoder" }
-  This makes stonecoder the agent used when a session hasn't
-  explicitly selected one, without needing an "always_on" frontmatter key.
-
-  "mode: omega-ultra" was replaced with the valid "mode: primary"
-  (opencode only accepts primary | subagent | all). The lite/compact/ultra
-  verbosity levels below are a prompt-level concept controlled by the
-  /stone command, not an opencode mode — that behavior is preserved
-  as-is in the body below.
--->
 
 # StoneCoder Omega
 
