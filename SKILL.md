@@ -28,6 +28,37 @@ Pause: `/stone stop` → standard mode. Resume: `/stone`
 
 ---
 
+## MCP Tools — Remote Connectors
+
+**Available (all remote, OAuth/token on first use):**
+
+| MCP | Use for |
+|-----|---------|
+| `context7` | Live library/framework docs — pull before writing against unfamiliar or fast-moving APIs |
+| `gh_grep` | Cross-repo code search — pattern/impl lookup across public GitHub |
+| `github` | PRs, issues, repo ops, code review, commit history |
+| `vercel` | Deploy status, project config, env vars, domains |
+| `cloudflare` | DNS, Workers, Pages, R2, CF-specific infra ops |
+| `supabase` | Postgres schema, RLS policies, auth, storage — treat as DB source of truth when project uses Supabase |
+| `sentry` | Error triage, stack traces, release health — pull on debugging tasks before speculating on root cause |
+| `linear` | Issue tracking, ticket status/creation |
+| `notion` | Docs/specs lookup when project references Notion as source of truth |
+
+Rules:
+- Never call an MCP tool speculatively — only when task explicitly needs that system's live data
+- One MCP round-trip per distinct need, no redundant re-fetch of same data same session
+- If MCP call fails (auth/network) → surface once, don't retry-loop, don't silently fall back to guessing
+- `context7` / `gh_grep` calls replace guessing at API signatures — never hallucinate a method/param when a docs lookup is one call away
+- `sentry` first on any bug report with a stack trace or error ID — don't debug blind if the trace is fetchable
+- MCP output subject to same token-efficiency rule as everything else: extract only what's needed, don't dump full payloads into context
+
+Format on use:
+```text
+MCP: [name] → [reason] → [result used]
+```
+
+---
+
 ## NVIDIA NIM — Rate Limit Guard
 
 **Account limit: 40 rpm. Hard ceiling, never exceed.**
@@ -107,6 +138,7 @@ Reverted: [identifier] (change N of N)
 - autonomous reasoning
 - complete implementation delivery
 - external API rate-limit aware (see NVIDIA NIM guard above)
+- MCP-aware: use live connectors over memory/guessing when available (see MCP Tools above)
 
 ---
 
@@ -158,6 +190,7 @@ CONFIG CHECK:
 - If index missing → `CREATE INDEX` automatically
 - After any auto-fix → update `initial.sql` to reflect new truth
 - Never create migration files — `initial.sql` is single source of truth
+- If project uses `supabase` MCP, verify schema against live Supabase project, not just local `initial.sql`
 - Format:
 ```text
 DB CHECK:
@@ -181,6 +214,17 @@ NIM CHECK:
   ✓ RateLimiter — 40rpm, token-bucket
   ✓ Concurrency — max 2 in-flight
   ✗ Backoff — missing, adding exponential backoff + jitter
+```
+
+**MCP (auto-run when relevant connectors configured):**
+- Confirm which remote MCPs are available this session (context7, gh_grep, github, vercel, cloudflare, supabase, sentry, linear, notion)
+- Do not attempt local/filesystem-dependent MCP behavior — none configured, all connectors are remote-only
+- Format:
+```text
+MCP CHECK:
+  ✓ context7, gh_grep — available, no auth needed
+  ✓ github — connected
+  ✗ supabase — not connected, connect if project uses Supabase
 ```
 
 ### Frontend — Design
@@ -253,6 +297,7 @@ NIM CHECK:
 - Cloud agnostic, infra as code friendly
 - Immutable deployment patterns, rollout-safe updates
 - Observability, logging standards, metrics, health checks
+- `vercel`/`cloudflare` MCP for deploy status/config checks before assuming deploy state
 
 ### DevOps — CI/CD
 - Reproducible, deterministic pipelines
@@ -265,6 +310,7 @@ NIM CHECK:
 - Alerting readiness, metrics instrumentation
 - Failure visibility, low-noise logs
 - Production diagnostics support
+- `sentry` MCP for live error/release data over asking user to paste logs
 
 ### AI Systems
 - LLM integration aware
@@ -285,6 +331,7 @@ NIM CHECK:
 - Preserve working systems
 - No unrelated cleanup
 - `ResourceExhausted` / `429` from NIM → check concurrency + rpm guard first, not model/prompt
+- Stack trace / error ID present → pull via `sentry` MCP before speculating
 
 ### Terminal Efficiency
 - Read once, cache parsed context
@@ -337,6 +384,8 @@ NIM CHECK:
 - Migration files (use `initial.sql` only)
 - Parallel/burst calls to rate-limited external APIs (NIM included)
 - Retry loops without backoff/cap
+- Speculative/unneeded MCP calls
+- Hallucinating API/library signatures when `context7`/`gh_grep` available
 
 ---
 
@@ -442,6 +491,11 @@ NIM CHECK:
   Result:
 ```
 
+**MCP Call:**
+```text
+MCP: [name] → [reason] → [result used]
+```
+
 ---
 
 ## Behavior
@@ -486,3 +540,4 @@ Deterministic scalable engineering execution.
 Elite UI/UX quality.
 End-to-end production-safe delivery without stopping midway.
 NVIDIA NIM calls always rate-limited (40rpm), concurrency-capped (2), backoff-protected — zero ResourceExhausted in production.
+MCP connectors used only when task-relevant — live docs/data over guessing, never speculative calls.
