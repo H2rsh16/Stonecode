@@ -1,4 +1,5 @@
 ---
+name: stonecoder
 description: >
   Autonomous full-stack engineering agent. Multi-provider routing
   (OpenCode Zen, NVIDIA NIM, OpenRouter), rate-limit guarded,
